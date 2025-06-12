@@ -4,7 +4,7 @@ from itertools import product
 from itertools import permutations
 import copy
 
-from game_theory_implementation.ps_setup import *
+from RL_signalling.ps_setup import *
 
 def signal_colours(val):
     color = '#8BC34A' if 'C' in str(val) else '#F44336' if 'D' in str(val) else '#dceffc' if 'N' in str(val) else '#72a3d4' if 'W' in str(val) else '#3232a8' if 'S' in str(val) else '#fcfcfc'
@@ -73,32 +73,14 @@ def remove_factors(x, length):
 
 signal_strengths = ['N', 'W', 'S']
 
-# change payoffs so they can be calculated automatically using above list? List may need to be numbers for t then
-# PAYOFF_1 = np.array([[1, 0], [0.75, 0], [0.25, 0]])
-# PAYOFF_2 = np.array([[S, 1], [S, 1], [S, 1]])
-
-
-# LEARNING_RATE = 0.1
-# DISCOUNT_RATE = 0.9
-# EXPLORATION = 50
 
 # GAME
 
 class SignalGame(SequentialGame):
-    # Need to incorporate thirsty / not thirsty - start with one scenario?
-    # THIRSTY
-    # PAYOFF_1 = np.array([[1, 0], [0.75, 0], [0.25, 0]])
-    # PAYOFF_2 = np.array([[S, 1], [S, 1], [S, 1]])
-
-    # NOT THIRSTY
-#     PAYOFF_1 = np.array([[1, V], [0.75, 0.75*V], [0.25, 0.25*V]])
-#     PAYOFF_2 = np.array([[S, 1], [S, 1], [S, 1]])
-    
     PAYOFF_1 = np.array([[1*r, V*r], [(1-t_w)*r, (1-t_w)*V*r], [(1-t_s)*r, (1-t_s)*V*r]])
     PAYOFF_2 = np.array([[S*r, 1*r], [S*r, 1*r], [S*r, 1*r]])
 
     def __init__(self, player, opponent, rounds=10):
-        #         self.history = History()
         self.rounds = rounds
         self.player = player
         self.opponent = opponent
@@ -130,7 +112,7 @@ class SignalGame(SequentialGame):
                     pass
 
                 if len(self.ACTIONS) < self.player.memory + 1:  # play random at first
-                    for x in range(int(6 ** self.player.memory)):  # need to add zeros to q-values list
+                    for x in range(int(6 ** self.player.memory)):
                         for y in range(3):
                             self.player.q_values[(3 * x) + y].append(self.player.q_table[x, y])
 
@@ -181,7 +163,7 @@ class SignalGame(SequentialGame):
                     pass
 
                 if len(self.OP_ACTIONS) < self.opponent.memory + 1:  # play random at first
-                    for x in range(int(6 ** self.opponent.memory)):  # need to add zeros to q-values list
+                    for x in range(int(6 ** self.opponent.memory)):
                         for y in range(2):
                             self.opponent.q_values[(2 * x) + y].append(self.opponent.q_table[x, y])
 
@@ -402,7 +384,7 @@ class PSGame(SignalGame):
                     pass
 
                 if len(self.ACTIONS) < self.player.memory + 1:  # play random at first
-                    for x in range(int(6 ** self.player.memory)):  # need to add zeros to q-values list
+                    for x in range(int(6 ** self.player.memory)):
                         for y in range(3):
                             self.player.q_values[(3 * x) + y].append(self.player.q_table[x, y])
 
@@ -453,7 +435,7 @@ class PSGame(SignalGame):
                     pass
 
                 if len(self.OP_ACTIONS) < self.opponent.memory + 1:  # play random at first
-                    for x in range(int(6 ** self.opponent.memory)):  # need to add zeros to q-values list
+                    for x in range(int(6 ** self.opponent.memory)):
                         for y in range(2):
                             self.opponent.q_values[(2 * x) + y].append(self.opponent.q_table[x, y])
 

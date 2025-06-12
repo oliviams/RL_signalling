@@ -4,26 +4,20 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from itertools import product
 
-from game_theory_implementation.lr_dr import *
-from game_theory_implementation.param import *
+from RL_signalling.lr_dr import *
+from RL_signalling.param import *
 
-# S = 3  # survival probability of donor if gives resource
-# V = 2  # survival probability of beneficiary if in need of resource but not given
-# t = 0.2  # cost of signalling
-# p = 0.7  # probability beneficiary needs resource
-# r = 0.4  # coefficient of relatedness
-
-np.random.seed(42) # to ensure stability between runs - has to be reset every time
+np.random.seed(42)
 
 
 def action_colours(val):
+    """Colour background for actions: green for C, red for D"""
     color = '#8BC34A' if 'C' in str(val) else '#F44336'
     return f'background-color: {color}'
 
 
 class Player():
-    """Player class - currently empty class but
-    may need to add functionality common to all player classes"""
+    """Base class for all players"""
 
     def __init__(self, strategy):
         self.strategy = strategy
@@ -36,11 +30,9 @@ class SimultaneousGame():
     """Simultaneous Game environment"""
     PAYOFF_1 = np.array([[V*(1-t), 1-t], [V, 1]])
     PAYOFF_2 = np.array([[1, S], [1, S]])
-#     PAYOFF_1 = np.array([[1, 5], [V, 5]])
-#     PAYOFF_2 = np.array([[5, S], [5, S]])
+
 
     def __init__(self, player, opponent, rounds=10):
-        #         self.history = History()
         self.rounds = rounds
         self.player = player
         self.opponent = opponent
@@ -49,9 +41,6 @@ class SimultaneousGame():
         self.ACTION_PAIRS = []
 
         for i in range(rounds):
-            # self.SimultaneousGame.append(player.play_turn(self.ACTIONS, self.OP_ACTIONS),
-            #                          opponent.play_turn(self.OP_ACTIONS, self.ACTIONS))
-
             action = player.play_turn(self.ACTIONS, self.OP_ACTIONS)
             op_action = opponent.play_turn(self.OP_ACTIONS, self.ACTIONS)
             self.ACTIONS.append(action)
@@ -62,7 +51,7 @@ class SimultaneousGame():
 
         return self.ACTION_PAIRS
 
-    def result(self):  # Should this and cumulative result go in history class?
+    def result(self):
         """Score for each round (not cumulative)"""
 
         game = self.ACTION_PAIRS
@@ -96,8 +85,6 @@ class SimultaneousGame():
 
     def cumulative_graph(self):
         """Graph of cumulative scores"""
-
-#         game = self.ACTION_PAIRS
 
         plt.xlabel("Round")
         plt.ylabel("Score")
@@ -182,11 +169,8 @@ class SequentialGame(SimultaneousGame):
     """Sequential Game environment"""
     PAYOFF_1 = np.array([[V*(1-t), 1-t], [V, 1]])
     PAYOFF_2 = np.array([[1, S], [1, S]])
-#     PAYOFF_1 = np.array([[1, 5], [V, 5]])
-#     PAYOFF_2 = np.array([[5, S], [5, S]])
 
     def __init__(self, player, opponent, rounds=10):
-        #         self.history = History()
         self.rounds = rounds
         self.player = player
         self.opponent = opponent
@@ -202,7 +186,7 @@ class SequentialGame(SimultaneousGame):
             self.ACTION_PAIRS.append(p)
             self.ACTION_PAIRS.append(o)
 
-    def result(self):  # Should this and cumulative result go in history class?
+    def result(self):
         """Score for each round (not cumulative)"""
 
         game = [t.upper() for t in self.ACTION_PAIRS]
@@ -390,7 +374,7 @@ class Random(Player):
             return 'D'
 
 
-class WinStayLoseShift(Player):  # Check if there are different versions of this, as some only defect for x rounds etc.
+class WinStayLoseShift(Player):
     """Starts by cooperating, but once opponent
     defects will always defect"""
 
@@ -407,14 +391,13 @@ class WinStayLoseShift(Player):  # Check if there are different versions of this
 
 
 class QLearner(Player):
-    """Learns the best strategy through Q-learning.
-    Explores (plays randomly) for the first 20 turns"""
+    """Agent that learns the best strategy through Q-learning.
+    Explores (plays randomly) for a given initial number of rounds"""
 
-    learning_rate = 0.8
-    discount_rate = 0.5
-
-    def __init__(self, memory=1):
+    def __init__(self, memory=1, learning_rate=0.9, discount_rate = 0.1):
         self.memory = memory
+        self.learning_rate = learning_rate
+        self.discount_rate = discount_rate
         self.q_table = np.zeros([4 ** self.memory, 2])  # q-table initialised with zeros
 
         # all possible C & D combinations for the states
@@ -434,8 +417,8 @@ class QLearner(Player):
             elif value == 1:
                 return 'D'
 
-        elif len(actions) < self.memory:  # play random at first
-            for x in range(int(4 ** self.memory)):  # need to add zeros to q-values list
+        elif len(actions) < self.memory:
+            for x in range(int(4 ** self.memory)):
                 for y in range(2):
                     self.q_values[(2 * x) + y].append(self.q_table[x, y])
 
@@ -462,7 +445,7 @@ class QLearner(Player):
             elif actions[-1].upper() == 'D' and op_actions[-1].upper() == 'D':
                 reward = Game.PAYOFF_1[1, 1]
 
-            if len(actions) < 20:  # explore (play random) for first 20 turns
+            if len(actions) < EXPLORATION:  # explore (play random) for first x turns
                 action = np.random.randint(2)
 
                 # update q-table and q-value list given the state (for all other states, list just updates with previous value)
