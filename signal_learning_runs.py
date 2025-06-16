@@ -17,10 +17,7 @@ colours = ['blue', 'orange', 'green']
 actions_list = ['C', 'D']
 colours_act = ['blue', 'red']
 
-action_combo = []
-for i in ['C', 'D']:
-    for j in ['N', 'W', 'S']:
-        action_combo.append(j + i)
+action_combo = [j + i for i in actions_list for j in signals]
 
 state_names = [''.join(x) for x in product(action_combo, repeat=1 * memory)]
 
@@ -31,6 +28,7 @@ actions = []
 op_actions = []
 cumulative = []
 strategies = []
+
 for i in range(runs):
     game = PSGame(SignalQLearner(memory=memory), DonorQLearner(memory=memory), rounds = rounds)
     if 'QLearner' in type(game.player).__name__:
