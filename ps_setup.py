@@ -9,10 +9,13 @@ from RL_signalling.param import *
 
 np.random.seed(42)
 
+ACTION_COLORS = {'C': '#8BC34A', 'D': '#F44336'}
+ACTIONS = ['C', 'D']
+
 
 def action_colours(val):
     """Colour background for actions: green for C, red for D"""
-    color = '#8BC34A' if 'C' in str(val) else '#F44336'
+    color = ACTION_COLORS.get('C' if 'C' in str(val) else 'D')
     return f'background-color: {color}'
 
 
@@ -367,11 +370,7 @@ class Random(Player):
         pass
 
     def play_turn(self, actions, op_actions):
-        value = np.random.randint(2)
-        if value == 0:
-            return 'C'
-        elif value == 1:
-            return 'D'
+        return np.random.choice(['C', 'D'])
 
 
 class WinStayLoseShift(Player):
