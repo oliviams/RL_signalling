@@ -6,8 +6,11 @@ import copy
 
 from RL_signalling.ps_setup import *
 
+SIGNAL_COLORS = {'C': '#8BC34A', 'D': '#F44336',
+                'N': '#dceffc', 'W': '#72a3d4', 'S': '#3232a8'}
+
 def signal_colours(val):
-    color = '#8BC34A' if 'C' in str(val) else '#F44336' if 'D' in str(val) else '#dceffc' if 'N' in str(val) else '#72a3d4' if 'W' in str(val) else '#3232a8' if 'S' in str(val) else '#fcfcfc'
+    color = SIGNAL_COLORS.get('C' if 'C' in str(val) else 'D' if 'D' in str(val) else 'N' if 'N' in str(val) else 'W' if 'W' in str(val) else 'S' if 'S' in str(val) else '#fcfcfc')
     return f'background-color: {color}'
 
 def rotations(li):
