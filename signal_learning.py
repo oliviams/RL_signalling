@@ -10,8 +10,11 @@ SIGNAL_COLORS = {'C': '#8BC34A', 'D': '#F44336',
                 'N': '#dceffc', 'W': '#72a3d4', 'S': '#3232a8'}
 
 def signal_colours(val):
-    color = SIGNAL_COLORS.get('C' if 'C' in str(val) else 'D' if 'D' in str(val) else 'N' if 'N' in str(val) else 'W' if 'W' in str(val) else 'S' if 'S' in str(val) else '#fcfcfc')
-    return f'background-color: {color}'
+  """Colour background for actions"""
+  for signal in ['C', 'D', 'N', 'W', 'S']:
+    if signal in str(val):
+      return f'background-color: {SIGNAL_COLORS[signal]}'
+    return f'background-color: #fcfcfc'
 
 def rotations(li):
     count = 0
@@ -26,7 +29,6 @@ def unique_patterns(x, repeat):
     
     all_patterns = [p for p in product(x, repeat=repeat)]
     set_patterns = set(all_patterns)
-    
     unique_patterns = []
     
     for i in all_patterns:
@@ -44,8 +46,7 @@ def unique_patterns(x, repeat):
 def factorise(num):
     """Returns all factors of a number 
     excluding 1 and the number itself"""
-    factors = [n for n in range(2, num) if num % n == 0]
-    return factors
+    return [n for n in range(2, num) if num % n == 0]
 
 def remove_factors(x, length):
     """Remove subpatterns by deleting patterns
