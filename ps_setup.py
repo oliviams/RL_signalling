@@ -54,23 +54,16 @@ class SimultaneousGame():
 
         return self.ACTION_PAIRS
 
+    def _get_payoff(self, action1, action2):
+        """Helper method to get payoff for given action pair"""
+        action_to_idx = {'C': 0, 'D': 1}
+        i, j = action_to_idx[action1], action_to_idx[action2]
+        return (self.PAYOFF_1[i, j], self.PAYOFF_2[i, j])
+
     def result(self):
         """Score for each round (not cumulative)"""
 
-        game = self.ACTION_PAIRS
-        result = []
-
-        for turn in game:
-            if turn[0] == 'C' and turn[1] == 'C':
-                result.append((SimultaneousGame.PAYOFF_1[0, 0], SimultaneousGame.PAYOFF_2[0, 0]))
-            elif turn[0] == 'C' and turn[1] == 'D':
-                result.append((SimultaneousGame.PAYOFF_1[0, 1], SimultaneousGame.PAYOFF_2[0, 1]))
-            elif turn[0] == 'D' and turn[1] == 'C':
-                result.append((SimultaneousGame.PAYOFF_1[1, 0], SimultaneousGame.PAYOFF_2[1, 0]))
-            elif turn[0] == 'D' and turn[1] == 'D':
-                result.append((SimultaneousGame.PAYOFF_1[1, 1], SimultaneousGame.PAYOFF_2[1, 1]))
-
-        return result
+        return [self._get_payoff([turn[0], turn[1]) for turn in self.ACTION_PAIRS]
 
     def cumulative_result(self):
         """Cumulative score for the game"""
@@ -78,13 +71,9 @@ class SimultaneousGame():
         result = self.result()
         player_scores = [i[0] for i in result]
         opponent_scores = [i[1] for i in result]
-        cum_result = []
         player_cum = np.round(np.cumsum(player_scores), decimals=1).tolist()
         opponent_cum = np.round(np.cumsum(opponent_scores), decimals=1).tolist()
-        for p, o in zip(player_cum, opponent_cum):
-            cum_result.append((p, o))
-
-        return cum_result
+        cum_result = list(zip(player_cum, opponent_cum))
 
     def cumulative_graph(self):
         """Graph of cumulative scores"""
@@ -189,6 +178,7 @@ class SequentialGame(SimultaneousGame):
             self.ACTION_PAIRS.append(p)
             self.ACTION_PAIRS.append(o)
 
+
     def result(self):
         """Score for each round (not cumulative)"""
 
@@ -196,17 +186,10 @@ class SequentialGame(SimultaneousGame):
         result = []
 
         for i in range(0, len(game), 2):
-            if game[i] == 'C' and game[i + 1] == 'C':
-                result.append((SequentialGame.PAYOFF_1[0, 0], SequentialGame.PAYOFF_2[0, 0]))
-            elif game[i] == 'C' and game[i + 1] == 'D':
-                result.append((SequentialGame.PAYOFF_1[0, 1], SequentialGame.PAYOFF_2[0, 1]))
-            elif game[i] == 'D' and game[i + 1] == 'C':
-                result.append((SequentialGame.PAYOFF_1[1, 0], SequentialGame.PAYOFF_2[1, 0]))
-            elif game[i] == 'D' and game[i + 1] == 'D':
-                result.append((SequentialGame.PAYOFF_1[1, 1], SequentialGame.PAYOFF_2[1, 1]))
+            result.append(self._get_payoff([game[i], game[i+1]))
 
         return result
-
+    
     def cooperation_distribution(self):
         """Graph of the distribution of
         cooperation throughout the game"""
@@ -255,24 +238,11 @@ class GameSwitch(SequentialGame):
         result = []
 
         for i in range(0, len(game), 4):
-            if game[i] == 'C' and game[i + 1] == 'C':
-                result.append((SequentialGame.PAYOFF_1[0, 0], SequentialGame.PAYOFF_2[0, 0]))
-            elif game[i] == 'C' and game[i + 1] == 'D':
-                result.append((SequentialGame.PAYOFF_1[0, 1], SequentialGame.PAYOFF_2[0, 1]))
-            elif game[i] == 'D' and game[i + 1] == 'C':
-                result.append((SequentialGame.PAYOFF_1[1, 0], SequentialGame.PAYOFF_2[1, 0]))
-            elif game[i] == 'D' and game[i + 1] == 'D':
-                result.append((SequentialGame.PAYOFF_1[1, 1], SequentialGame.PAYOFF_2[1, 1]))
-
-            if game[i + 2] == 'C' and game[i + 3] == 'C':
-                result.append((SequentialGame.PAYOFF_2[0, 0], SequentialGame.PAYOFF_1[0, 0]))
-            elif game[i + 2] == 'C' and game[i + 3] == 'D':
-                result.append((SequentialGame.PAYOFF_2[1, 0], SequentialGame.PAYOFF_1[1, 0]))
-            elif game[i + 2] == 'D' and game[i + 3] == 'C':
-                result.append((SequentialGame.PAYOFF_2[0, 1], SequentialGame.PAYOFF_1[0, 1]))
-            elif game[i + 2] == 'D' and game[i + 3] == 'D':
-                result.append((SequentialGame.PAYOFF_2[1, 1], SequentialGame.PAYOFF_1[1, 1]))
-
+            result.append(self._get_payoff(game[i], game[i+1])
+                          
+            payoff_switch = self._get_payoff(game[i+2], game[i+3])
+            result.append(payoff_switch[1], payoff_switch[0])
+            
         return result
 
 
@@ -282,9 +252,6 @@ class GameSwitch(SequentialGame):
 class Cooperator(Player):
     """Always plays C"""
 
-    def __init__(self):
-        pass
-
     def play_turn(self, actions, op_actions):
         return 'C'
 
@@ -292,18 +259,12 @@ class Cooperator(Player):
 class Defector(Player):
     """Always plays D"""
 
-    def __init__(self):
-        pass
-
     def play_turn(self, actions, op_actions):
         return 'D'
 
 
 class Alternator(Player):
     """Alternates between C and D each turn, starts by playing C"""
-
-    def __init__(self):
-        pass
 
     def play_turn(self, actions, op_actions):
         if len(actions) == 0:
@@ -317,9 +278,6 @@ class Alternator(Player):
 class TitForTat(Player):
     """Matches opponent's last move, starts by playing C"""
 
-    def __init__(self):
-        pass
-
     def play_turn(self, actions, op_actions):
         if len(op_actions) == 0:
             return 'C'
@@ -329,9 +287,6 @@ class TitForTat(Player):
 
 class CyclerCCD(Player):
     """Cycles through moves CCD"""
-
-    def __init__(self):
-        pass
 
     def play_turn(self, actions, op_actions):
         if len(actions) == 0:
@@ -347,10 +302,7 @@ class CyclerCCD(Player):
 
 class CyclerDDC(Player):
     """Cycles through moves DDC"""
-
-    def __init__(self):
-        pass
-
+    
     def play_turn(self, actions, op_actions):
         if len(actions) == 0:
             return 'D'
@@ -366,9 +318,6 @@ class CyclerDDC(Player):
 class Random(Player):
     """Randomly selects to play C or D"""
 
-    def __init__(self):
-        pass
-
     def play_turn(self, actions, op_actions):
         return np.random.choice(['C', 'D'])
 
@@ -376,9 +325,6 @@ class Random(Player):
 class WinStayLoseShift(Player):
     """Starts by cooperating, but once opponent
     defects will always defect"""
-
-    def __init__(self):
-        pass
 
     def play_turn(self, actions, op_actions):
         if len(op_actions) == 0:
@@ -410,7 +356,6 @@ class QLearner(Player):
     def play_turn(self, actions, op_actions):
         if len(actions) == 0:  # play random at first
             value = np.random.randint(2)
-            print(self.q_table)
             if value == 0:
                 return 'C'
             elif value == 1:
@@ -422,7 +367,6 @@ class QLearner(Player):
                     self.q_values[(2 * x) + y].append(self.q_table[x, y])
 
             value = np.random.randint(2)
-            print(self.q_table)
             if value == 0:
                 return 'C'
             elif value == 1:
@@ -449,9 +393,9 @@ class QLearner(Player):
 
                 # update q-table and q-value list given the state (for all other states, list just updates with previous value)
                 self.q_table[self.state_dict[state], action] = self.q_table[self.state_dict[
-                                                                                state], action] + QLearner.learning_rate * (
+                                                                                state], action] + self.learning_rate * (
                                                                            reward +
-                                                                           QLearner.discount_rate * (self.q_table[
+                                                                           self.discount_rate * (self.q_table[
                                                                        self.state_dict[state], np.argmax(self.q_table[
                                                                                                              self.state_dict[
                                                                                                                  state], action])]) -
@@ -460,7 +404,6 @@ class QLearner(Player):
                 for x in range(4 ** self.memory):
                     for y in range(2):
                         self.q_values[(2 * x) + y].append(self.q_table[x, y])
-                print(self.q_table)
                 return self.action_dict[action]
 
 
@@ -470,9 +413,9 @@ class QLearner(Player):
                     np.where(self.q_table[self.state_dict[state]] == self.q_table[self.state_dict[state]].max())[0])
 
                 self.q_table[self.state_dict[state], action] = self.q_table[self.state_dict[
-                                                                                state], action] + QLearner.learning_rate * (
+                                                                                state], action] + self.learning_rate * (
                                                                            reward +
-                                                                           QLearner.discount_rate * (self.q_table[
+                                                                           self.discount_rate * (self.q_table[
                                                                        self.state_dict[state], np.argmax(self.q_table[
                                                                                                              self.state_dict[
                                                                                                                  state], action])]) -
@@ -481,5 +424,4 @@ class QLearner(Player):
                 for x in range(4 ** self.memory):
                     for y in range(2):
                         self.q_values[(2 * x) + y].append(self.q_table[x, y])
-                print(self.q_table)
                 return self.action_dict[action]
